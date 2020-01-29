@@ -1,0 +1,74 @@
+plugins {
+    id 'java'
+    id 'application'
+    id "com.github.spotbugs" version "1.6.2"
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+mainClassName = 'drawscillate.AppController'
+
+repositories {
+    jcenter()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    implementation 'controlp5:controlp5:2.2.4'
+    implementation 'org.processing:core:3.3.7'
+    implementation name: 'sound'
+    implementation name: 'javamp3-1.0.4'
+    implementation name: 'jsyn-20171016'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+/* Spot Bugs Configuration */
+
+spotbugs {
+    ignoreFailures = true
+    toolVersion = "3.1.3"
+    sourceSets=[sourceSets.main]
+    excludeFilter = file("config/spotbugs/excludeFilter.xml")
+    reportsDir = file("$project.buildDir/reports/spotbugs")
+    effort = "max"
+}
+
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
+
+/* Smart Smells Configuration */
+
+repositories {
+    maven {
+        url  "http://dl.bintray.com/arturbosch/code-analysis"
+    }
+}
+
+configurations {
+    smartsmells
+}
+
+task smartsmells(type: JavaExec) {
+    main = "io.gitlab.arturbosch.smartsmells.Main"
+    classpath = configurations.smartsmells
+    def input = "$project.projectDir.absolutePath/src/main"
+    def baseDir = "$project.projectDir/build/reports/"
+    def output = "$baseDir/smells/smartsmells.xml"
+    def params = [ '-i', input, '-o', output, '-fs', '-f', ".*/test/.*"]
+    args(params)
+}
+
+dependencies {
+    smartsmells 'io.gitlab.arturbosch.smartsmells:SmartSmells:1.0.0.RC8'
+}
